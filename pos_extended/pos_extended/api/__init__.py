@@ -5,5 +5,6 @@ import frappe
 def get_pos_fields():
     return frappe.get_all(
         'POS Extended Settings Field',
-        fields=['field', 'label']
+        fields=['field', 'label'],
+        order_by='idx ASC'
     )
