@@ -14,23 +14,9 @@ class POSExtendedCart extends POSCart {
 
         // ERPNext
         const is_stock_item = this.get_item_details(item.item_code).is_stock_item;
-        const rate = format_currency(item.rate, this.frm.doc.currency);
         const indicator_class = (!is_stock_item || item.actual_qty >= item.qty) ? 'green': 'red';
         const batch_no = item.batch_no || '';
 
-        // <div class="item-name list-item__content list-item__content--flex-1.5 ellipsis">
-        //             ${item.item_name}
-        //         </div>
-        //         <div class="quantity list-item__content text-right">
-        //             ${get_quantity_html(item.qty)}
-        //         </div>
-        //         <div class="discount list-item__content text-right">
-        //             ${item.discount_percentage}%
-        //         </div>
-        //         <div class="rate list-item__content text-right">
-        //             ${rate}
-        //         </div>
-        //
         return `
             <div class="list-item indicator ${indicator_class}" data-item-code="${escape(item.item_code)}"
                 data-batch-no="${batch_no}" title="Item: ${item.item_name}  Available Qty: ${item.actual_qty}">
@@ -40,29 +26,29 @@ class POSExtendedCart extends POSCart {
 
         function get_item_fields_html(item) {
             const fields = me.fields.map(function(column) {
-                const className = column.label.split(' ').join('_').toLowerCase();
-                return `
-                    <div class="${className} list-item__content text-right">
-                        ${item[column.field]}
-                    </div>
-                `;
+                return me.get_cart_field(item, column);
             });
             return fields.join("\n");
         }
+    }
 
-        function get_quantity_html(value) {
-            return `
-                <div class="input-group input-group-xs">
-                    <span class="input-group-btn">
-                        <button class="btn btn-default btn-xs" data-action="increment">+</button>
-                    </span>
-                    <input class="form-control" type="number" value="${value}">
-                    <span class="input-group-btn">
-                        <button class="btn btn-default btn-xs" data-action="decrement">-</button>
-                    </span>
-                </div>
-            `;
+    get_cart_field(item, column) {
+        const className = column.label.split(' ').join('_').toLowerCase();
+        let value = item[column.field];
+
+        if (column.type === "Qty") {
+            value = _get_quantity_html(value);
+        } else if (column.type === "Currency") {
+            value = format_currency(value, this.frm.doc.currency);
+        } else if (column.type === "Discount") {
+            value = `${value}%`;
         }
+
+        return `
+            <div class="${className} list-item__content text-right">
+                ${value}
+            </div>
+        `;
     }
 
     make_fields() {
@@ -90,6 +76,20 @@ var _render_fields = function(cart) {
             </div>
         `);
     }
+};
+
+var _get_quantity_html = function(value) {
+    return `
+        <div class="input-group input-group-xs">
+            <span class="input-group-btn">
+                <button class="btn btn-default btn-xs" data-action="increment">+</button>
+            </span>
+            <input class="form-control" type="number" value="${value}">
+            <span class="input-group-btn">
+                <button class="btn btn-default btn-xs" data-action="decrement">-</button>
+            </span>
+        </div>
+    `;
 };
 
 
