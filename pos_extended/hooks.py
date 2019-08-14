@@ -23,7 +23,7 @@ app_license = "MIT"
 # web_include_js = "/assets/pos_extended/js/pos_extended.js"
 
 # include js in page
-page_js = {"point-of-sale": "public/js/point_of_sale.js"}
+page_js = {"pos": "public/js/pos.js", "point-of-sale": "public/js/point_of_sale.js"}
 
 # include js in doctype views
 # doctype_js = {"doctype" : "public/js/doctype.js"}
