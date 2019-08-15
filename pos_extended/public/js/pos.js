@@ -3,6 +3,64 @@ erpnext.pos.PointOfSale = erpnext.pos.PointOfSale.extend({
         this._super();
         this.make_pos_fields();
     },
+    add_to_cart: function() {
+        const me = this;
+
+        this.customer_validate();
+        this.validate_serial_no();
+        this.validate_warehouse();
+
+        const { has_batch_no } = this.items[0];
+
+        let validate = function() {
+            validate_item();
+        };
+
+        if (has_batch_no) {
+            validate = () => {
+                me.mandatory_batch_no(validate_item);
+            };
+        }
+
+        validate();
+
+        function validate_item() {
+            const item = me.check_item_exists();
+            if (!item) {
+                me.add_new_item_to_grid();
+            } else {
+                item.qty = item.qty + 1;
+                item.amount = flt(item.rate) * flt(item.qty);
+            }
+            me.update_paid_amount_status(false);
+            me.wrapper.find(".item-cart-items").scrollTop(1000);
+        }
+    },
+    check_item_exists: function() {
+        return this.frm.doc.items.find(
+            ({ item_code, batch_no }) =>
+                item_code === this.items[0].item_code
+                && batch_no === this.items[0].batch_no
+        );
+    },
+    mandatory_batch_no: function(callback) {
+        const me = this;
+        if (this.items[0].has_batch_no && !this.item_batch_no[this.items[0].item_code]) {
+            frappe.prompt([{
+                'fieldname': 'batch',
+                'fieldtype': 'Select',
+                'label': __('Batch No'),
+                'reqd': 1,
+                'options': this.batch_no_data[this.items[0].item_code]
+            }],
+            function(values) {
+                me.items[0].batch_no = values.batch;
+                me.item_batch_no[me.items[0].item_code] = values.batch;
+                callback();
+            },
+            __('Select Batch No'));
+        }
+    },
     show_items_in_item_cart: function() {
         const me = this;
         const $items = this.wrapper.find(".items").empty();
@@ -41,8 +99,6 @@ erpnext.pos.PointOfSale = erpnext.pos.PointOfSale.extend({
 
 
 var _render_pos_item = function($items, pos, item) {
-//    pos-list-row pos-bill-item data-item-code=['item_code']
-    // cell
     $items.append(`
         <div class="pos-list-row pos-bill-item" data-item-code="${item.item_code}">
             ${get_pos_item_fields(item)}
