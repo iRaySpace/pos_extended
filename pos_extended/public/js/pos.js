@@ -3,6 +3,10 @@ erpnext.pos.PointOfSale = erpnext.pos.PointOfSale.extend({
         this._super();
         this.make_pos_fields();
     },
+    render_selected_item: function() {
+        this._super();
+        this.make_editable_fields();
+    },
     add_to_cart: function() {
         const me = this;
 
@@ -83,6 +87,45 @@ erpnext.pos.PointOfSale = erpnext.pos.PointOfSale.extend({
            $(this).select();
         });
     },
+    make_editable_fields: function() {
+        const item = this.item_data.find(item => item.item_code === this.item_code);
+        if (item.has_batch_no) {
+            this.make_editable_batch_field();
+        }
+    },
+    make_editable_batch_field: function() {
+        const editable_wrapper = this.wrapper.find('.pos-selected-item-action');
+        const idx = editable_wrapper.data('idx');
+        $(`
+            <div class="pos-list-row">
+                <div class="cell">${__('Batch No')}:</div>
+                <select type="text" class="form-control cell pos-item-batch" />
+            </div>
+        `).prependTo(editable_wrapper);
+
+        const item = this.child_doc[0];
+        const $select = this.wrapper.find('.pos-item-batch');
+        this.batch_no_data[this.item_code].forEach(batch_no => {
+            const opts = {
+                value: batch_no,
+                selected: item && batch_no === item.batch_no
+            };
+            $('<option />', opts)
+                .text(batch_no)
+                .appendTo($select);
+        });
+
+        $select.on('change', e => {
+            e.stopPropagation();
+            this.update_selected_item(item, { batch_no: e.target.value });
+            this.render_selected_item();
+        });
+    },
+    update_selected_item: function(item, args) {
+        for (const arg in args) {
+            item[arg] = args[arg];
+        }
+    },
     make_pos_fields: function() {
         const me = this;
         frappe.call({
@@ -94,7 +137,7 @@ erpnext.pos.PointOfSale = erpnext.pos.PointOfSale.extend({
                 }
             }
         });
-    }
+    },
 });
 
 
