@@ -3,6 +3,17 @@ erpnext.pos.PointOfSale = erpnext.pos.PointOfSale.extend({
         this._super();
         this.make_pos_fields();
     },
+    validate: function() {
+        this._super();
+        this.validate_qty();
+    },
+    validate_qty: function() {
+        this.frm.doc.items.forEach(item => {
+            if (item.qty > item.actual_qty) {
+                frappe.throw(__("Qty is greater than the actual qty."));
+            }
+        });
+    },
     render_selected_item: function() {
         this._super();
         this.make_editable_fields();
