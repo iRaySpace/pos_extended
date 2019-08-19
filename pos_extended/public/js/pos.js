@@ -3,9 +3,22 @@ erpnext.pos.PointOfSale = erpnext.pos.PointOfSale.extend({
         this._super();
         this.make_pos_fields();
     },
+    submit_invoice: function() {
+        this._super();
+        this.update_bin_qty();
+    },
     validate: function() {
         this._super();
         this.validate_qty();
+    },
+    update_bin_qty: function() {
+        for (let i = 0; i < this.frm.doc.items.length; i++) {
+            const item = this.frm.doc.items[i];
+            const bin_qty = this.bin_data[item.item_code][item.warehouse];
+            this.bin_data[item.item_code][item.warehouse] = bin_qty - item.qty;
+        }
+        this.items = this.get_items();
+        this.make_item_list();
     },
     validate_qty: function() {
         this.frm.doc.items.forEach(item => {
